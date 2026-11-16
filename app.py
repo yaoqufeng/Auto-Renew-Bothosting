@@ -310,10 +310,8 @@ def normalize_date(date_str: str) -> str:
             return f"{parts[0]}/{int(parts[1]):02d}/{int(parts[2]):02d}"
     return date_str
 
-DATE_RE = r"(\d{4}/\d{1,2}/\d{1,2}|\d{1,2}/\d{1,2}/\d{4})"
-
 # 获取过期日期
-DATE_RE = r"(\d{1,2}\s+[A-Za-z]{3,9}\s+\d{4}|\d{1,2}/\d{1,2}/\d{4}|\d{4}-\d{2}-\d{2})"
+DATE_RE = r"(\d{1,2}\s+[A-Za-z]{3,9}\s+\d{4}|[A-Za-z]{3,9}\s+\d{1,2},?\s+\d{4}|\d{1,2}/\d{1,2}/\d{4}|\d{4}-\d{2}-\d{2})"
 def extract_expiry_date(page_source: str) -> str:
     patterns = [
         r"[Ee]xpires\s*[:\-]?\s*" + DATE_RE,   # 优先匹配包含 "Expires" 的
@@ -437,7 +435,11 @@ def main():
         possible_selectors = [
             'type:button("Renew free plan")',
             'button:contains("Renew free plan")',
-            '[class*="btn btn-primary btn-sm"]',
+            'a:contains("Renew free plan")',
+            'button:contains("Renew")',
+            'a:contains("Renew")',
+            "//*[self::button or self::a][contains(., 'Renew')]",
+            '[class*="btn-primary"]',
         ]
 
         for selector in possible_selectors:
@@ -456,7 +458,13 @@ def main():
                         break
             except Exception as e:
                 pass
-
+    if not outer_renew_selector and not countdown_text:
+        try:
+            visible_texts = [(el.text or "").strip() for el in sb.find_elements("button, a") if el.is_displayed() and (el.text or "").strip()]
+            print(f"🔍 未找到续期按钮，页面可见按钮/链接文本：{visible_texts}")
+        except Exception:
+            pass
+                
         # 点击外部续期按钮等待弹窗
         if outer_renew_selector:
             print("🔄 点击外部续期按钮，等待验证窗口...")
@@ -557,14 +565,16 @@ def main():
                     )
                 )
             else:
-                print("ℹ️ 未找到续期按钮或倒计时，状态未知")
+                print("❌ 未找到续期按钮或倒计时，状态未知")
                 send_telegram_message(
                     format_notification(
-                        "ℹ️ 无需续期",
-                        extra="当前状态未知，请手动检查",
+                        "❌ 状态未知，续期未执行",
+                        extra="未找到续期按钮或倒计时，请手动检查",
                         expiry_date=current_expiry or "（未获取到）"
                     )
                 )
+                print("🏁 脚本执行完毕（状态未知，按失败处理）")
+                sys.exit(1)
 
         print("🏁 脚本执行完毕")
 
