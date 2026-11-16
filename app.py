@@ -474,17 +474,8 @@ def main():
             except Exception as e:
                 pass
     if not outer_renew_selector and not countdown_text:
-        try:
-            src = sb.get_page_source()
-            print(f"🔍 页面源码长度：{len(src)}")
-for kw in ["续期", "到期", "Renew"]:
-    idx = src.find(kw)
-    if idx >= 0:
-        print(f"🔍 源码中「{kw}」附近：" + src[max(0, idx-200):idx+250].replace("\n", " "))
-    else:
-        print(f"🔍 源码中未找到「{kw}」")
-        except Exception as e:
-            print(f"🔍 获取页面源码失败：{e}")
+        try: print(f"🔍 页面源码长度：{len(sb.get_page_source())}")
+        except Exception as e: print(f"🔍 获取页面源码失败：{e}")
                 
         # 点击外部续期按钮等待弹窗
         if outer_renew_selector:
