@@ -476,7 +476,7 @@ def main():
     if not outer_renew_selector and not countdown_text:
         try:
             src = sb.get_page_source()
-print(f"🔍 页面源码长度：{len(src)}")
+            print(f"🔍 页面源码长度：{len(src)}")
 for kw in ["续期", "到期", "Renew"]:
     idx = src.find(kw)
     if idx >= 0:
