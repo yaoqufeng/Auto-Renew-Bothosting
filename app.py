@@ -460,10 +460,15 @@ def main():
                 pass
     if not outer_renew_selector and not countdown_text:
         try:
-            visible_texts = [(el.text or "").strip() for el in sb.find_elements("button, a") if el.is_displayed() and (el.text or "").strip()]
-            print(f"🔍 未找到续期按钮，页面可见按钮/链接文本：{visible_texts}")
-        except Exception:
-            pass
+            page_text = sb.get_page_text()
+            print(f"🔍 状态未知，页面可见文本（前3000字）：\n{page_text[:3000]}")
+        except Exception as e:
+            print(f"🔍 获取页面文本失败：{e}")
+        try:
+            btn_texts = sb.execute_script("return Array.from(document.querySelectorAll('button, a, [role=\"button\"]')).filter(e => e.offsetParent !== null).map(e => (e.innerText || e.textContent || '').trim()).filter(t => t)")
+            print(f"🔍 页面按钮/链接文本：{btn_texts}")
+        except Exception as e:
+            print(f"🔍 获取按钮文本失败：{e}")
                 
         # 点击外部续期按钮等待弹窗
         if outer_renew_selector:
