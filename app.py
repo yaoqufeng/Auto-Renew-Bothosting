@@ -473,10 +473,10 @@ def main():
                         break
             except Exception as e:
                 pass
-    if not outer_renew_selector and not countdown_text:
-        try: print(f"🔍 页面源码长度：{len(sb.get_page_source())}")
-        except Exception as e: print(f"🔍 获取页面源码失败：{e}")
-                
+        if not outer_renew_selector and not countdown_text:
+            try: print(f"🔍 页面源码长度：{len(sb.get_page_source())}")
+            except Exception as e: print(f"🔍 获取页面源码失败：{e}")
+
         # 点击外部续期按钮等待弹窗
         if outer_renew_selector:
             print("🔄 点击外部续期按钮，等待验证窗口...")
