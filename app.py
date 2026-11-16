@@ -420,7 +420,7 @@ def main():
         # 提取当前到期日期
         sb.sleep(3)
         # 关闭"广告让免费套餐保持免费"弹窗（中英文都试），否则弹窗会挡住续期按钮的点击
-        for modal_sel in ['button:contains("继续使用免费套餐")', 'a:contains("继续使用免费套餐")', '//*[contains(text(), "继续使用免费套餐")]', 'button:contains("Continue")', 'a:contains("Continue")']:           
+        for modal_sel in ['.fpn-actions > .btn-ghost', 'button:contains("继续使用免费套餐")', 'a:contains("继续使用免费套餐")', '//*[contains(text(), "继续使用免费套餐")]', 'button:contains("Continue")', 'a:contains("Continue")']:           
             try:
                 if sb.is_element_visible(modal_sel):
                     sb.click(modal_sel)
@@ -443,7 +443,7 @@ def main():
         outer_renew_selector = None
         countdown_text = None
         possible_selectors = [
-            'button:contains("续期 4 天")',
+            'button.btn:nth-child(4)', 'button:contains("续期4天")', 'button:contains("续期 4 天")',
             'button:contains("续期免费套餐")',
             'button:contains("续期")',
             'a:contains("续期")',
