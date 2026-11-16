@@ -537,7 +537,7 @@ for kw in ["续期", "到期", "Renew"]:
 
             # 提取新的到期日期和倒计时
             try:
-                new_src = sb.get_page_source() + "\n" + sb.get_page_source()
+                new_page_text = sb.get_page_source() + "\n" + sb.get_page_source()
             except Exception:
                 new_page_text = sb.get_page_source()
             new_expiry = get_expiry_from_dom(sb) or extract_expiry_date(new_page_text)
