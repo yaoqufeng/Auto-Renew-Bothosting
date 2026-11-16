@@ -311,7 +311,7 @@ def normalize_date(date_str: str) -> str:
     return date_str
 
 # 获取过期日期
-DATE_RE = r"(\d{1,2}\s+[A-Za-z]{3,9}\s+\d{4}|[A-Za-z]{3,9}\s+\d{1,2},?\s+\d{4}|\d{1,2}/\d{1,2}/\d{4}|\d{4}-\d{2}-\d{2})"
+DATE_RE = r"(\d{1,2}\s+[A-Za-z]{3,9}\s+\d{4}|[A-Za-z]{3,9}\s+\d{1,2},?\s+\d{4}|\d{1,2}/\d{1,2}/\d{4}|\d{4}-\d{2}-\d{2}|\d{4}年\d{1,2}月\d{1,2}日)"
 def extract_expiry_date(page_source: str) -> str:
     patterns = [
         r"[Ee]xpires\s*[:\-]?\s*" + DATE_RE,   # 优先匹配包含 "Expires" 的
@@ -419,6 +419,16 @@ def main():
 
         # 提取当前到期日期
         sb.sleep(3)
+        # 关闭"广告让免费套餐保持免费"弹窗（中英文都试），否则弹窗会挡住续期按钮的点击
+        for modal_sel in ['button:contains("继续使用免费套餐")', 'a:contains("继续使用免费套餐")', '//*[contains(text(), "继续使用免费套餐")]', 'button:contains("Continue")', 'a:contains("Continue")']:           
+            try:
+                if sb.is_element_visible(modal_sel):
+                    sb.click(modal_sel)
+                    print(f"✅ 已关闭广告弹窗: {modal_sel}")
+                    sb.sleep(1)
+                    break
+            except Exception:
+                pass
         try:
             page_source = sb.get_page_text() + "\n" + sb.get_page_source()
         except Exception:
@@ -433,6 +443,11 @@ def main():
         outer_renew_selector = None
         countdown_text = None
         possible_selectors = [
+            'button:contains("续期 4 天")',
+            'button:contains("续期免费套餐")',
+            'button:contains("续期")',
+            'a:contains("续期")',
+            "//*[self::button or self::a][contains(., '续期')]",
             'type:button("Renew free plan")',
             'button:contains("Renew free plan")',
             'a:contains("Renew free plan")',
@@ -452,7 +467,7 @@ def main():
                         countdown_text = match.group(1)
                         print(f"⏳ 续期冷却中, 未到续期时间: '{button_text}'")
                         break
-                    elif "Renew" in button_text:
+                    elif "Renew" in button_text or "续期" in button_text:
                         outer_renew_selector = selector
                         print(f"✅ 续期按钮可用: '{button_text}'")
                         break
@@ -460,15 +475,16 @@ def main():
                 pass
     if not outer_renew_selector and not countdown_text:
         try:
-            page_text = sb.get_page_text()
-            print(f"🔍 状态未知，页面可见文本（前3000字）：\n{page_text[:3000]}")
+            src = sb.get_page_source()
+print(f"🔍 页面源码长度：{len(src)}")
+for kw in ["续期", "到期", "Renew"]:
+    idx = src.find(kw)
+    if idx >= 0:
+        print(f"🔍 源码中「{kw}」附近：" + src[max(0, idx-200):idx+250].replace("\n", " "))
+    else:
+        print(f"🔍 源码中未找到「{kw}」")
         except Exception as e:
-            print(f"🔍 获取页面文本失败：{e}")
-        try:
-            btn_texts = sb.execute_script("return Array.from(document.querySelectorAll('button, a, [role=\"button\"]')).filter(e => e.offsetParent !== null).map(e => (e.innerText || e.textContent || '').trim()).filter(t => t)")
-            print(f"🔍 页面按钮/链接文本：{btn_texts}")
-        except Exception as e:
-            print(f"🔍 获取按钮文本失败：{e}")
+            print(f"🔍 获取页面源码失败：{e}")
                 
         # 点击外部续期按钮等待弹窗
         if outer_renew_selector:
@@ -521,7 +537,7 @@ def main():
 
             # 提取新的到期日期和倒计时
             try:
-                new_page_text = sb.get_page_text() + "\n" + sb.get_page_source()
+                new_src = sb.get_page_source() + "\n" + sb.get_page_source()
             except Exception:
                 new_page_text = sb.get_page_source()
             new_expiry = get_expiry_from_dom(sb) or extract_expiry_date(new_page_text)
